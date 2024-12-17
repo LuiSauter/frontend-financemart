@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
+import StoreProvider from "./StoreProvider";
+import Header from "@/components/pages/header";
+import Footer from "@/components/pages/footer";
+import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSans = FontSans({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -23,11 +22,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${fontSans.variable} antialiased`}
       >
-        {children}
+        <StoreProvider>
+          <div className="flex min-h-screen flex-col bg-black">
+            <div className="min-h-screen bg-black text-white">
+              <main className="container mx-auto">
+                {children}
+              </main>
+              <Toaster />
+            </div>
+          </div>
+        </StoreProvider>
       </body>
     </html>
   );
