@@ -7,12 +7,29 @@ interface Balance {
   assets: number;
   liabilities: number;
   equity: number;
+  year: number;
+}
+
+interface Comparison {
+  assetsChange: {
+    absolute: number;
+    relative: number;
+  };
+  liabilitiesChange: {
+    absolute: number;
+    relative: number;
+  };
+  equityChange: {
+    absolute: number;
+    relative: number;
+  };
 }
 
 const Patrimonial = () => {
-  const { balance }: { balance: Balance } = useBalance();
-  const [historicalData, setHistoricalData] = useState([]);
-  const [comparison, setComparison] = useState({});
+  const { balance } = useBalance();
+  const [historicalData, setHistoricalData] = useState<Balance[]>([]);
+
+  const [comparison, setComparison] = useState<Comparison | null>(null);
 
   useEffect(() => {
     // Ejemplo de datos históricos
@@ -28,8 +45,8 @@ const Patrimonial = () => {
 
       setComparison({
         assetsChange: {
-          absolute: (balance.assets && lastYearData.assets) ? balance.assets - lastYearData.assets : 0,
-          relative: (balance.assets && lastYearData.assets) ? ((balance.assets - lastYearData.assets) / lastYearData.assets) * 100 : 0,
+          absolute: (balance?.assets && lastYearData.assets) ? balance.assets - lastYearData.assets : 0,
+          relative: (balance?.assets && lastYearData.assets) ? ((balance.assets - lastYearData.assets) / lastYearData.assets) * 100 : 0,
         },
         liabilitiesChange: {
           absolute: (balance.liabilities && lastYearData.liabilities) ? balance.liabilities - lastYearData.liabilities : 0,
@@ -41,6 +58,7 @@ const Patrimonial = () => {
         },
       });
     }
+    // if (comparison?.assetsChange.absolute > 0) {}
   }, [historicalData, balance]);
 
   if (!balance) {
@@ -55,31 +73,31 @@ const Patrimonial = () => {
   const generateConclusions = () => {
     const conclusions = [];
 
-    if (comparison.assetsChange?.absolute > 0) {
-      conclusions.push(`Los activos han aumentado en ${comparison.assetsChange?.absolute} unidades, lo que representa un ${comparison.assetsChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
+    if ((comparison?.assetsChange?.absolute ?? 0) > 0) {
+      conclusions.push(`Los activos han aumentado en ${comparison?.assetsChange?.absolute} unidades, lo que representa un ${comparison?.assetsChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
     } else {
-      conclusions.push(`Los activos han disminuido en ${comparison.assetsChange?.absolute} unidades, lo que representa un ${comparison.assetsChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
+      conclusions.push(`Los activos han disminuido en ${comparison?.assetsChange?.absolute} unidades, lo que representa un ${comparison?.assetsChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
     }
 
-    if (comparison.liabilitiesChange?.absolute > 0) {
-      conclusions.push(`Los pasivos han aumentado en ${comparison.liabilitiesChange?.absolute} unidades, lo que representa un ${comparison.liabilitiesChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
+    if ((comparison?.liabilitiesChange?.absolute ?? 0) > 0) {
+      conclusions.push(`Los pasivos han aumentado en ${comparison?.liabilitiesChange?.absolute} unidades, lo que representa un ${comparison?.liabilitiesChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
     } else {
-      conclusions.push(`Los pasivos han disminuido en ${comparison.liabilitiesChange?.absolute} unidades, lo que representa un ${comparison.liabilitiesChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
+      conclusions.push(`Los pasivos han disminuido en ${comparison?.liabilitiesChange?.absolute} unidades, lo que representa un ${comparison?.liabilitiesChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
     }
 
-    if (comparison.equityChange?.absolute > 0) {
-      conclusions.push(`El patrimonio ha aumentado en ${comparison.equityChange?.absolute} unidades, lo que representa un ${comparison.equityChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
+    if ((comparison?.equityChange?.absolute ?? 0) > 0) {
+      conclusions.push(`El patrimonio ha aumentado en ${comparison?.equityChange?.absolute} unidades, lo que representa un ${comparison?.equityChange?.relative?.toFixed(2)}% de incremento respecto al año anterior.`);
     } else {
-      conclusions.push(`El patrimonio ha disminuido en ${comparison.equityChange?.absolute} unidades, lo que representa un ${comparison.equityChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
+      conclusions.push(`El patrimonio ha disminuido en ${comparison?.equityChange?.absolute} unidades, lo que representa un ${comparison?.equityChange?.relative?.toFixed(2)}% de decremento respecto al año anterior.`);
     }
 
-    if (currentRatio > 1) {
+    if (Number(currentRatio) > 1) {
       conclusions.push(`La razón corriente es de ${currentRatio}, lo que indica que la empresa tiene suficientes activos para cubrir sus pasivos a corto plazo.`);
     } else {
       conclusions.push(`La razón corriente es de ${currentRatio}, lo que indica que la empresa puede tener dificultades para cubrir sus pasivos a corto plazo.`);
     }
 
-    if (debtToEquityRatio > 1) {
+    if (Number(debtToEquityRatio) > 1) {
       conclusions.push(`La razón de deuda a patrimonio es de ${debtToEquityRatio}, lo que indica que la empresa tiene más deuda que patrimonio.`);
     } else {
       conclusions.push(`La razón de deuda a patrimonio es de ${debtToEquityRatio}, lo que indica que la empresa tiene más patrimonio que deuda.`);
@@ -138,27 +156,27 @@ const Patrimonial = () => {
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Absoluto en Activos</h3>
-              <p className="text-2xl font-bold">{comparison.assetsChange?.absolute ?? 0}</p>
+              <p className="text-2xl font-bold">{comparison?.assetsChange?.absolute ?? 0}</p>
             </div>
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Relativo en Activos</h3>
-              <p className="text-2xl font-bold">{comparison.assetsChange?.relative?.toFixed(2) ?? 0}%</p>
+              <p className="text-2xl font-bold">{comparison?.assetsChange?.relative?.toFixed(2) ?? 0}%</p>
             </div>
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Absoluto en Pasivos</h3>
-              <p className="text-2xl font-bold">{comparison.liabilitiesChange?.absolute ?? 0}</p>
+              <p className="text-2xl font-bold">{comparison?.liabilitiesChange?.absolute ?? 0}</p>
             </div>
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Relativo en Pasivos</h3>
-              <p className="text-2xl font-bold">{comparison.liabilitiesChange?.relative?.toFixed(2) ?? 0} %</p>
+              <p className="text-2xl font-bold">{comparison?.liabilitiesChange?.relative?.toFixed(2) ?? 0} %</p>
             </div>
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Absoluto en Patrimonio</h3>
-              <p className="text-2xl font-bold">{comparison.equityChange?.absolute ?? 0}</p>
+              <p className="text-2xl font-bold">{comparison?.equityChange?.absolute ?? 0}</p>
             </div>
             <div className="bg-zinc-800  text-white p-4 rounded-lg shadow-sm">
               <h3 className="font-semibold text-lg">Cambio Relativo en Patrimonio</h3>
-              <p className="text-2xl font-bold">{comparison.equityChange?.relative?.toFixed(2)}%</p>
+              <p className="text-2xl font-bold">{comparison?.equityChange?.relative?.toFixed(2)}%</p>
             </div>
           </div>
         </div>

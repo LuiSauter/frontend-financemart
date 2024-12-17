@@ -5,14 +5,32 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { API_BASEURL } from "@/lib/api.utils";
-import { getStorage, STORAGE_USER } from "@/lib/storage.utils";
 import { Button } from "@/components/ui/button";
+
+interface Balance {
+  id: string;
+  year: number;
+  month: number;
+  assets: {
+    totalCurrentAssets: number;
+    totalFixedAssets: number;
+    totalDeferredAssets: number;
+    totalAssets: number;
+  };
+  liabilities: {
+    totalCurrentLiabilities: number;
+    totalFixedLiabilities: number;
+    totalEquity: number;
+    totalLiabilitiesEquity: number;
+  };
+}
 
 function BalancesPage() {
   const navigate = useRouter()
   const user = useSelector((state: RootState) => state.user);
-  const [balances, setBalances] = useState([])
-  const getBalances = async (id) => {
+
+  const [balances, setBalances] = useState<Balance[]>([])
+  const getBalances = async (id: string) => {
     try {
       const token = localStorage.getItem("token")
       const config = {
@@ -52,9 +70,9 @@ function BalancesPage() {
 
           <div className="container mx-auto p-4">
             {balances.length > 0 && balances.map((balance) => (
-              <div key={balance.id} className="mb-8">
+              <div key={balance?.id} className="mb-8">
                 <h2 className="text-2xl font-bold mb-4">
-                  Balance general de la fecha {balance.year}-{balance.month}
+                  Balance general de la fecha {balance?.year}-{balance.month}
                 </h2>
                 <table className="min-w-full border border-gray-200">
                   <thead>

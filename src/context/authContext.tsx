@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
   const { createResource: authLogin, isMutating: authMutating } =
     useCreateResource<AuthLogin>({ endpoint: `${ENDPOINTS.AUTH}` })
 
-    const router = useRouter()
+  const router = useRouter()
 
   const { createResource: checkToken } = useCreateResource({ endpoint: `${ENDPOINTS.AUTH}/check-token`, query: new URLSearchParams({ token: getStorage(STORAGE_TOKEN)! }).toString() })
 
@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
       void checkAuthStatus()
     }
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       subscribe = true
     }
   }, [])
@@ -116,6 +117,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
 
   const value = useMemo(() => {
     return { status, error, signOut, signWithEmailPassword, isMutating: authMutating }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, error, authMutating])
 
   return (

@@ -1,9 +1,33 @@
 'use client'
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-// Define the type for the balance object
+export interface Entries {
+  name: ReactNode;
+  id: string;
+  year: number;
+  month: number;
+  value: number;
+  assets: {
+    totalCurrentAssets: number;
+    totalFixedAssets: number;
+    totalDeferredAssets: number;
+    totalAssets: number;
+  };
+  liabilities: {
+    totalCurrentLiabilities: number;
+    totalFixedLiabilities: number;
+    totalEquity: number;
+    totalLiabilitiesEquity: number;
+  };
+  category: string;
+  subcategory: string;
+}
+
 interface Balance {
-  entries: unknown[]; // Replace `any` with the specific type of entries if known
+  equity: number;
+  liabilities: number;
+  assets: number;
+  entries: Entries[]; // Replace `any` with the specific type of entries if known
 }
 
 // Define the context value type
@@ -22,6 +46,9 @@ interface BalanceProviderProps {
 
 export const BalanceProvider: React.FC<BalanceProviderProps> = ({ children }) => {
   const [balance, setBalance] = useState<Balance>({
+    equity: 0,
+    liabilities: 0,
+    assets: 0,
     entries: [],
   });
 

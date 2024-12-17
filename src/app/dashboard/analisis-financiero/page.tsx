@@ -21,12 +21,10 @@ const Financial = () => {
     stock: 0,
     clientes: 0,
     proveedores: 0,
-    ...balance.entries[0]
+    ...(typeof balance.entries[0] === 'object' ? balance.entries[0] : {})
   });
 
-  const [showModal, setShowModal] = useState(false);
-
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       ...data,
       [e.target.name]: e.target.value
@@ -36,11 +34,11 @@ const Financial = () => {
   const calculateRatios = () => {
     const {
       activoCirculante,
-      activoFijo,
-      otrosActivos,
+      // activoFijo,
+      // otrosActivos,
       pasivoCortoPlazo,
-      pasivoLargoPlazo,
-      patrimonio,
+      // pasivoLargoPlazo,
+      // patrimonio,
       ventasNetas,
       comprasCosto,
       stock,
@@ -48,17 +46,17 @@ const Financial = () => {
       proveedores
     } = data;
 
-    const AC = parseFloat(activoCirculante);
-    const PC = parseFloat(pasivoCortoPlazo);
-    const AF = parseFloat(activoFijo);
-    const OA = parseFloat(otrosActivos);
-    const PCLP = parseFloat(pasivoLargoPlazo);
-    const PAT = parseFloat(patrimonio);
-    const VN = parseFloat(ventasNetas);
-    const CC = parseFloat(comprasCosto);
-    const ST = parseFloat(stock);
-    const CL = parseFloat(clientes);
-    const PR = parseFloat(proveedores);
+    const AC = parseFloat(activoCirculante.toString());
+    const PC = parseFloat(pasivoCortoPlazo.toString());
+    // const AF = parseFloat(activoFijo.toString());
+    // const OA = parseFloat(otrosActivos.toString());
+    // const PCLP = parseFloat(pasivoLargoPlazo.toString());
+    // const PAT = parseFloat(patrimonio.toString());
+    const VN = parseFloat(ventasNetas.toString());
+    const CC = parseFloat(comprasCosto.toString());
+    const ST = parseFloat(stock.toString());
+    const CL = parseFloat(clientes.toString());
+    const PR = parseFloat(proveedores.toString());
 
     const razonFuncionamiento = AC / PC;
     const razonTesoreria = (AC - ST) / PC;
@@ -108,12 +106,12 @@ const Financial = () => {
       {
         label: 'Componentes Financieros',
         data: [
-          parseFloat(data.activoCirculante),
-          parseFloat(data.activoFijo),
-          parseFloat(data.otrosActivos),
-          parseFloat(data.pasivoCortoPlazo),
-          parseFloat(data.pasivoLargoPlazo),
-          parseFloat(data.patrimonio)
+          parseFloat(data.activoCirculante.toString()),
+          parseFloat(data.activoFijo.toString()),
+          parseFloat(data.otrosActivos.toString()),
+          parseFloat(data.pasivoCortoPlazo.toString()),
+          parseFloat(data.pasivoLargoPlazo.toString()),
+          parseFloat(data.patrimonio.toString())
         ],
         fill: false,
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -121,9 +119,6 @@ const Financial = () => {
       }
     ]
   };
-
-  const handleShowModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
 
   return (
     <div className="p-4">

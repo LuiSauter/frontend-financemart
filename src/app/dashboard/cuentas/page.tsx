@@ -102,32 +102,46 @@ function generateYearRange(startYear: number) {
   return years;
 }
 
-const STATE_ASSETS = {
+export type Asset = { account: string; amount: number };
+
+export interface Assets {
   currentAssets: {
-    availableAssets: [],
-    demandableAssets: [],
-    realizableAssets: [],
-  },
-  fixedAssets: [],
-  deferredAssets: [],
+    availableAssets: Asset[];
+    demandableAssets: Asset[];
+    realizableAssets: Asset[];
+  };
+  fixedAssets: Asset[];
+  deferredAssets: Asset[];
 }
 
-const STATE_LIA = {
-  currentLiabilities: [],
-  fixedLiabilities: [],
-  equity: [],
+// export const STATE_ASSETS: Assets = {
+//   currentAssets: {
+//     availableAssets: [] as Asset[],
+//     demandableAssets: [] as Asset[],
+//     realizableAssets: [] as Asset[],
+//   },
+//   fixedAssets: [] as Asset[],
+//   deferredAssets: [] as Asset[],
+// };
+
+export type Liability = { account: string; amount: number };
+
+export interface LiabilitiesEquity {
+  currentLiabilities: Liability[];
+  fixedLiabilities: Liability[];
+  equity: Liability[];
 }
 
-const BalanceSheet = () => {
+const BalanceSheetPage = () => {
   const { balance, setBalance } = useBalance();
   // const { user } = useAuth();
   const user = useSelector((state: RootState) => state.user);
   const [newEntry, setNewEntry] = useState({ name: "", category: "activo", subcategory: "", subcategory2: "", value: 0 });
   const [error, setError] = useState("");
-  const [periodType, setPeriodType] = useState(user.balance_type);
+  // const [periodType, setPeriodType] = useState(user.balance_type);
   const [period, setPeriod] = useState({ month: months[new Date().getMonth()], year: new Date().getFullYear() });
-  const [assets, setAssets] = useState(STATE_ASSETS);
-  const [liabilitiesEquity, setLiabilitiesEquity] = useState(STATE_LIA);
+  const [assets, setAssets] = useState({} as Assets);
+  const [liabilitiesEquity, setLiabilitiesEquity] = useState({} as LiabilitiesEquity);
   const chartRef = useRef(null);
   const [isDownload, setIsDownload] = useState(false);
 
@@ -141,7 +155,7 @@ const BalanceSheet = () => {
     }
   }, [newEntry.category]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "category" || name === "subcategory") {
       setNewEntry((prev) => ({
@@ -172,8 +186,7 @@ const BalanceSheet = () => {
     }
   };
 
-  const verifyRepeatedEntry = (accountName, arr) => {
-    console.log(accountName, arr)
+  const verifyRepeatedEntry = (accountName: string, arr: { account: string }[]) => {
     if (arr.some((entry) => entry.account === accountName)) {
       setError("El nombre de la cuenta ya existe");
       throw new Error("El nombre de la cuenta ya existe");
@@ -257,7 +270,7 @@ const BalanceSheet = () => {
       }));
     }
 
-    const updatedEntries = [...balance.entries, { ...newEntry, id: balance.entries.length + 1, name: accountName, value: parseFloat(newEntry.value) }];
+    const updatedEntries = [...balance.entries, { ...newEntry, id: (balance.entries.length + 1).toString(), name: accountName, value: parseFloat(newEntry.value.toString()), year: period.year, month: months.findIndex((month) => month === period.month) + 1, assets: { ...assets, totalCurrentAssets: 0, totalFixedAssets: 0, totalDeferredAssets: 0, totalAssets: 0 }, liabilities: { ...liabilitiesEquity, totalCurrentLiabilities: 0, totalFixedLiabilities: 0, totalEquity: 0, totalLiabilitiesEquity: 0 } }];
     setBalance({ ...balance, entries: updatedEntries });
 
     setNewEntry(prev => ({
@@ -269,20 +282,20 @@ const BalanceSheet = () => {
     setError("");
   };
 
-  const handleDeleteEntry = (id) => {
+  const handleDeleteEntry = (id: string) => {
     const updatedEntries = balance.entries.filter((entry) => entry.id !== id);
     setBalance({ ...balance, entries: updatedEntries });
   };
 
-  const sortedEntries = (category, subcategory) => {
+  const sortedEntries = (category: string, subcategory: string | null = null) => {
     return balance.entries.filter((entry) => entry.category === category && entry.subcategory === subcategory);
   };
 
-  const calculateTotal = (category, subcategory = null) => {
+  const calculateTotal = (category: string, subcategory: string | null = null) => {
     return balance.entries.filter((entry) => entry.category === category && (subcategory ? entry.subcategory === subcategory : true)).reduce((acc, entry) => acc + entry.value, 0);
   };
 
-  const calculateOverallTotal = (categories) => {
+  const calculateOverallTotal = (categories: string[]) => {
     return balance.entries.filter((entry) => categories.includes(entry.category)).reduce((acc, entry) => acc + entry.value, 0);
   };
 
@@ -290,7 +303,7 @@ const BalanceSheet = () => {
     return calculateOverallTotal(["pasivo", "patrimonio"]);
   };
 
-  const createBalance = async (obj) => {
+  const createBalance = async (obj: { year: number; month: number; assets: Assets; liabilitiesEquity: LiabilitiesEquity }) => {
     try {
       const token = localStorage.getItem("token")
       const config = {
@@ -306,9 +319,9 @@ const BalanceSheet = () => {
     }
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (period.month === "" || period.year === "") {
+    if (period.month === "" || period.year === 0) {
       setError("El mes y el año son obligatorios");
       return;
     }
@@ -361,24 +374,23 @@ const BalanceSheet = () => {
       category: "activo",
       subcategory: "",
       subcategory2: "",
-      availableAsset: "",
-      value: 0
+      value: 0,
+      name: ""
     });
-
   }
 
-  const [arrOptions, setArrOptions] = useState([])
+  const [arrOptions, setArrOptions] = useState<Record<string, string>>({})
 
-  function dynamicOptions(subcategory2) {
-    if (subcategory2 === "availableAssets") return AVAILABLE_ASSETS_ACCOUNT
-    if (subcategory2 === "demandableAssets") return DEMANDABLE_ASSETS_ACCOUNT
-    if (subcategory2 === "realizableAssets") return REALIZABLE_ASSETS_ACCOUNT
-    if (subcategory2 === "fijo") return FIXED_ASSETS_ACCOUNT
-    if (subcategory2 === "otros_activos") return DEFERRED_ASSETS_ACCOUNT
-    if (subcategory2 === "corto_plazo") return CURRENT_LIABILITIES_ACCOUNT
-    if (subcategory2 === "largo_plazo") return FIXED_LIABILITIES_ACCOUNT
-    if (subcategory2 === "patrimonio") return EQUITY_ACCOUNT
-    return []
+  function dynamicOptions(subcategory2: string): Record<string, string> {
+    if (subcategory2 === "availableAssets") return AVAILABLE_ASSETS_ACCOUNT;
+    if (subcategory2 === "demandableAssets") return DEMANDABLE_ASSETS_ACCOUNT;
+    if (subcategory2 === "realizableAssets") return REALIZABLE_ASSETS_ACCOUNT;
+    if (subcategory2 === "fijo") return FIXED_ASSETS_ACCOUNT;
+    if (subcategory2 === "otros_activos") return DEFERRED_ASSETS_ACCOUNT;
+    if (subcategory2 === "corto_plazo") return CURRENT_LIABILITIES_ACCOUNT;
+    if (subcategory2 === "largo_plazo") return FIXED_LIABILITIES_ACCOUNT;
+    if (subcategory2 === "patrimonio") return EQUITY_ACCOUNT;
+    return {};
   }
 
   return (
@@ -406,7 +418,7 @@ const BalanceSheet = () => {
                     <option value="diciembre">Diciembre</option>
                   </select>
                 )}
-                <select value={period.year} onChange={(e) => setPeriod((prev) => ({ ...prev, year: e.target.value }))} className="border p-2 rounded-lg focus:outline-none focus:ring-2 bg-zinc-800 border-black">
+                <select value={period.year} onChange={(e) => setPeriod((prev) => ({ ...prev, year: parseInt(e.target.value) }))} className="border p-2 rounded-lg focus:outline-none focus:ring-2 bg-zinc-800 border-black">
                   {generateYearRange(2000).map((year) => (
                     <option key={year} value={year}>
                       {year}
@@ -916,10 +928,10 @@ const BalanceSheet = () => {
               <header className="flex w-full justify-between items-center py-5  ">
                 <div className="space-x-4">
                   {isDownload && <button type='button' onClick={() => {
-                    setAssets(STATE_ASSETS)
-                    setLiabilitiesEquity(STATE_LIA)
+                    setAssets({} as Assets)
+                    setLiabilitiesEquity({} as LiabilitiesEquity)
                     setIsDownload(false)
-                    setBalance({ entries: [] })
+                    setBalance({ ...balance, entries: [] })
                   }} className="bg-purple-400 text-white px-4 py-1 rounded-lg shadow hover:bg-purple-500">
                     ¿Nuevo Balance?
                   </button>}
@@ -932,7 +944,7 @@ const BalanceSheet = () => {
 
             <div className="flex flex-col w-full bg-zinc-800 rounded-lg p-4 justify-center items-center mb-5">
               <div className="w-full md:w-1/2 h-[400px]">
-                <BalanceSheetCharts balance={balance} chartRef={chartRef} />
+                <BalanceSheetCharts ref={chartRef} />
               </div>
             </div>
           </div>
@@ -942,4 +954,4 @@ const BalanceSheet = () => {
   );
 };
 
-export default BalanceSheet;
+export default BalanceSheetPage
